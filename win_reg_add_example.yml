@@ -1,0 +1,15 @@
+---
+- name: windows registry add
+  hosts: win
+  vars:
+    mypath: 'HKLM:\Software\Test'
+    mykey: 'hello'
+    mytype: string
+    myvalue: 'world'
+  tasks:
+    - name: registry add key-value
+      ansible.windows.win_regedit:
+        path: "{{ mypath }}"
+        name: "{{ mykey }}"
+        type: "{{ mytype }}"
+        data: "{{ myvalue }}"

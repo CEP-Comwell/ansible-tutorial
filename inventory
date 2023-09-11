@@ -1,1 +1,29 @@
-192.168.5.23
+# Application servers
+[app]
+10.101.0.4
+
+[db]
+
+[win]
+10.101.0.2
+
+[win:vars]
+ansible_ssh_user=cpadmin
+#ansible_password=''
+ansible_connection=ssh
+ansible_shell_type=powershell
+ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+ansible_ssh_retries=3
+ansible_become_method=runas
+ansible_python_interpreter=/usr/bin/python3
+
+# Group has all the servers
+[multi:children]
+app
+db
+win
+
+# Variables for all the servers
+[multi:vars]
+ansible_user=cpadmin
+ansible_ssh_private_key_file=~/.ssh/id_ed25519

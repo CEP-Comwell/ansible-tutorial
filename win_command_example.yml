@@ -1,0 +1,10 @@
+---
+- name: win_command module demo
+  hosts: win
+  tasks:
+    - name: check netstat
+      ansible.windows.win_command: "netstat -e"
+      register: command_output
+    - name: command output
+      ansible.builtin.debug: 
+        var: command_output.stdout_lines 
