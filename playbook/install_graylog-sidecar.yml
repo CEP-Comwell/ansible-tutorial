@@ -1,0 +1,12 @@
+---
+- hosts: win
+  #remote_user: cpadmin
+  become: true
+  become_method: ssh
+  become_user: cpadmin
+
+  tasks:
+  - name: Install graylog-sidecar
+    win_chocolatey:
+      name: graylog-sidecar
+      state: present

@@ -1,0 +1,82 @@
+version: '3'
+services:
+  # MongoDB: https://hub.docker.com/_/mongo/
+  mongodb:
+    image: mongo:5.0.3
+    networks:
+      - graylog
+  #DB in share for persistence
+    volumes:
+      - /mongo_data:/data/db
+    restart: "on-failure"
+
+  # Opensearch
+  opensearch:
+      image: "opensearchproject/opensearch:2.4.0"
+      environment:
+        - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+        - "bootstrap.memory_lock=true"
+        - "discovery.type=single-node"
+        - "action.auto_create_index=false"
+        - "plugins.security.ssl.http.enabled=false"
+        - "plugins.security.disabled=true"
+      ulimits:
+        memlock:
+          hard: -1
+          soft: -1
+        nofile:
+          soft: 65536
+          hard: 65536
+      volumes:
+        - "os_data:/usr/share/opensearch/data"
+      restart: "on-failure"
+      networks:
+        - graylog
+
+  # Graylog: https://hub.docker.com/r/graylog/graylog/
+  graylog:
+    image: graylog/graylog:5.1
+    #journal and config directories in local NFS share for persistence
+    volumes:
+      - /graylog_journal:/usr/share/graylog/data/journal
+    environment:
+      # CHANGE ME (must be at least 16 characters)!
+      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+      # Password: admin
+      - GRAYLOG_ROOT_PASSWORD_SHA2=e1b24204830484d635d744e849441b793a6f7e1032ea1eef40747d95d30da592
+      - GRAYLOG_HTTP_BIND_ADDRESS="0.0.0.0:9000"
+      - GRAYLOG_ELASTICSEARCH_HOSTS="http://opensearch:9200"
+      - GRAYLOG_MONGODB_URI="mongodb://mongodb:27017/graylog"
+      - GRAYLOG_HTTP_EXTERNAL_URI="http://192.168.5.23:9000"
+    entrypoint: /usr/bin/tini -- wait-for-it opensearch:9200 --  /docker-entrypoint.sh
+    networks:
+      - graylog
+    links:
+      - mongodb:mongo
+      - opensearch
+    restart: always
+    depends_on:
+      - mongodb
+      - opensearch
+    ports:
+      # Graylog web interface and REST API
+      - 9000:9000
+      # Syslog TCP
+      - 1514:1514
+      # Syslog UDP
+      - 1514:1514/udp
+      # GELF TCP
+      - 12201:12201
+      # GELF UDP
+      - 12201:12201/udp
+# Volumes for persisting data, see https://docs.docker.com/engine/admin/volumes/volumes/
+volumes:
+  mongo_data:
+    driver: local
+  os_data:
+    driver: local
+  graylog_journal:
+    driver: local
+networks:
+    graylog:
+      driver: bridge

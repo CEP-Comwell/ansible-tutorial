@@ -35,6 +35,8 @@
           - python3-pip
           - virtualenv
           - python3-setuptools
+          - git
+          - tree
         state: latest
         update_cache: true
 
@@ -55,6 +57,7 @@
         - docker-ce
         - docker-ce-cli
         - containerd.io
+        - net-tools
     - name: Install Docker Module for Python
       pip:
         name: docker
@@ -69,7 +72,7 @@
         state: present
     - name: adding ubuntu to docker group
       user:
-        name: ubuntu
+        name: cpadmin
         groups: docker
         append: yes
     - name: Install docker-compose
@@ -80,8 +83,11 @@
     - name: Change file ownership, group and permissions
       ansible.builtin.file:
         path: /usr/local/bin/docker-compose
-        owner: ubuntu
-        group: ubuntu
+        owner: cpadmin
+        group: cpadmin
+    - name: Pip install docker for Ansible's docker_login and docker_service modules
+      pip:
+        name: "docker-compose"
 
     - name: Pull default Docker image
       community.docker.docker_image:
