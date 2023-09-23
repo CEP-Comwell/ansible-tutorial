@@ -18,17 +18,20 @@
 # sudo timedatectl set-timezone UTC
 # echo -n YourPassword_with16Char | shasum -a 256
 ## Increase the Physical Volume (pv) to max size
-#pvresize /dev/sda3
+# pvresize /dev/sda3
 
 # Expand the Logical Volume (LV) to max size to match
-#lvresize -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv
+# lvresize -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv
 
 # Expand the filesystem itself
-#resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv
-
-# Create a custom volume for log_data (didn't work...)
-# docker volume create --driver=local --opt type=ext4 --opt device=/dev/disk/by-uuid/db8ffb61-7be8-4a41-8ae8-522e16e21045 graylog_log_data
-
+# resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv
+# edit /etc/fstab
+# /dev/disk/by-uuid/db8ffb61-7be8-4a41-8ae8-522e16e21045  /mnt/sdb        ext4    defaults        0       1
+# create docker volume
+# sudo docker volume create --driver=local --label=log_data --opt type=none --opt device=/mnt/sdb/data/_data  graylog_log_data
+# stop docker, then move graylog_log_data volume to .bak
+# create a link to the new mounted volume
+#  sudo ln /mnt/sdb/data/ /var/lib/docker/volumes/graylog_log_data
 
   # use files parameter to use multiple docker-compose.yml files
   - name: deploy Docker Compose stack
