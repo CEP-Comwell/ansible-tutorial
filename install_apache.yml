@@ -17,3 +17,14 @@
     apt:
       name: libapache2-mod-php
       state: latest
+      
+  handlers:
+    - name: Reload Apache
+      service:
+        name: apache2
+        state: reloaded
+
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted   
