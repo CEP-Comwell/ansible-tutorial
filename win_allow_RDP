@@ -1,0 +1,18 @@
+---
+- hosts: all
+  tasks:
+ 
+#  - name: Set timezone to 'Central Standard Time' (GMT-06:00)
+#    win_timezone:
+#      timezone: Central Standard Time
+ 
+  - name: Firewall rule to allow RDP on TCP port 3389
+    win_firewall_rule:
+      name: Remote Desktop
+      localport: 3389
+      action: allow
+      direction: in
+      protocol: tcp
+      profiles: [domain, private]
+      state: present
+      enabled: yes
