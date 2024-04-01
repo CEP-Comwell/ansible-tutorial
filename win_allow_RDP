@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: win
   tasks:
  
 #  - name: Set timezone to 'Central Standard Time' (GMT-06:00)
