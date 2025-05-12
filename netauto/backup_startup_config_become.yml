@@ -1,0 +1,49 @@
+- name: Backup Dell N4064 Switch Startup Config and transfer via SSH
+  hosts: dell_switch
+  gather_facts: no  # Keep fact gathering disabled
+  vars:
+    ansible_network_os: dellemc.os6.os6  # Specify the network OS
+    timestamp: "{{ lookup('pipe', 'date +%Y-%m-%dT%H:%M:%S') }}"  # Custom timestamp
+
+  tasks:
+    - name: Ensure the switch is reachable
+      ping:
+
+    - name: Ensure the backup directory exists
+      file:
+        path: "./backup"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+
+    - name: Retrieve startup config from the switch
+      dellemc.os6.os6_command:
+        commands: show startup-config
+      register: startup_config
+      failed_when: >
+        startup_config.stdout is not defined or
+        ('Invalid input' in startup_config.stdout or 'Error' in startup_config.stdout)
+
+    - name: Debug the startup config output
+      debug:
+        msg: "{{ startup_config.stdout }}"
+
+    - name: Save the startup config to a local file with a timestamp
+      copy:
+        content: "{{ startup_config.stdout }}"
+        dest: "./backup/startup-config-{{ inventory_hostname }}-{{ timestamp }}.cfg"
+      delegate_to: localhost
+
+    - name: Validate the saved startup config file
+      stat:
+        path: "./backup/startup-config-{{ inventory_hostname }}-{{ timestamp }}.cfg"
+      register: backup_file
+
+    - name: Fail if the backup file is missing or empty
+      fail:
+        msg: "Backup file for {{ inventory_hostname }} is missing or empty!"
+      when: backup_file.stat.exists == false or backup_file.stat.size == 0
+
+    - name: Verify the backup was saved successfully
+      debug:
+        msg: "Startup config for {{ inventory_hostname }} saved to ./backup/startup-config-{{ inventory_hostname }}-{{ timestamp }}.cfg"

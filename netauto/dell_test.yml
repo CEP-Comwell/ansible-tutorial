@@ -1,0 +1,66 @@
+- name: Install and configure TFTP server on localhost
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Install TFTP server package
+      apt:
+        name: tftpd-hpa
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Ensure TFTP server is running
+      service:
+        name: tftpd-hpa
+        state: started
+        enabled: yes
+
+    - name: Create TFTP directory
+      file:
+        path: /var/lib/tftpboot
+        state: directory
+        owner: tftp
+        group: tftp
+        mode: '0755'
+
+- name: Backup Dell N4064 Switch Startup Config and transfer via SSH
+  hosts: dell_switch
+  gather_facts: yes
+  tasks:
+    - name: Ensure the switch is reachable
+      ping:
+
+    - name: Backup startup config to TFTP server
+      dellemc.os6.os6_      - name: Backup Dell N4064 Switch Startup Config and transfer via SSH
+        hosts: dell_switch
+        gather_facts: no
+        tasks:
+          - name: Ensure the switch is reachable
+            ping:
+      
+          - name: Retrieve startup config from the switch
+            dellemc.os6.os6_command:
+              commands: show startup-config
+            register: startup_config
+      
+          - name: Save the startup config to a local file
+            copy:
+              content: "{{ startup_config.stdout }}"
+              dest: "/path/to/local/backup/startup-config-{{ inventory_hostname }}.cfg"
+            delegate_to: localhost
+      
+          - name: Verify the backup was saved successfully
+            debug:
+              msg: "Startup config for {{ inventory_hostname }} saved to /path/to/local/backup/startup-config-{{ inventory_hostname }}.cfg"command:
+        commands: copy startup-config tftp://192.168.0.1/startup-config-{{ inventory_hostname }}.cfg
+      register: backup_result
+
+    - name: Fetch the startup config from TFTP server
+      fetch:
+        src: /var/lib/tftpboot/startup-config-{{ inventory_hostname }}.cfg
+        dest: /path/to/local/backup/
+        flat: yes
+      delegate_to: localhost
+
+    - name: Verify fetch was successful
+      debug:
+        msg: "Fetch result: {{ backup_result }}"
