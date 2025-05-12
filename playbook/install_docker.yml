@@ -2,8 +2,8 @@
 - hosts: all
   become: true
   become_method: sudo
-  become_user: root
-
+  become_user: ansible
+  
   vars:
     container_count: 4
     default_container_name: docker
