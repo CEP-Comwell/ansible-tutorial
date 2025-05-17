@@ -4,7 +4,7 @@
   become: true
   vars:
     ansible_user_name: ansible
-    ansible_pub_key: "{{ lookup('file', '~/.ssh/ansible.pub') }}"
+    ansible_pub_key: "{{ lookup('file', '/opt/semaphore/.ssh/ansible.pub') }}"
 
   tasks:
     - name: Ensure the ansible user exists
