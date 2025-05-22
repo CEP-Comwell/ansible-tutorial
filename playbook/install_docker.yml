@@ -2,14 +2,13 @@
 - hosts: all
   become: true
   become_method: sudo
-  #become_user: ansible
-  
+
   vars:
     container_count: 4
     default_container_name: docker
     default_container_image: ubuntu
     default_container_command: sleep 1d
-  
+
   tasks:
     - name: packages | ensure apt list dir exists
       file:
@@ -22,7 +21,7 @@
         name: aptitude
         state: latest
         update_cache: true
-      
+
     - name: Install required system packages
       apt:
         pkg:
@@ -52,9 +51,10 @@
         state: latest
         update_cache: true
 
-    - name: Install Docker Module for Python
-      pip:
-        name: docker
+    - name: Install python3-docker via apt
+      apt:
+        name: python3-docker
+        state: present
 
     - name: Pull default Docker image
       community.docker.docker_image:
@@ -68,6 +68,7 @@
         command: "{{ default_container_command }}"
         state: present
       with_sequence: count={{ container_count }}
+
 # Troubleshooting:
 # ansible-playbook install_docker.yml -l app -K i.e. "app group"
 # If you get an error with a locked apt/list file 
